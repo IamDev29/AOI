@@ -4,7 +4,7 @@ Streamlit app to extract IC (integrated circuit) marking text via OCR and valida
 
 ## Overview
 
-- Upload an IC image, crop the marking ROI, and run OCR (EasyOCR).
+- Upload an IC image, crop the marking ROI, and run OCR (EasyOCR or Tesseract).
 - Validate the detected text via:
   - Gemini (Generative Language API) — preferred when `GEMINI_API_KEY` is set.
   - DeepSeek (LLM) — optional, can use SerpAPI search context.
@@ -17,7 +17,7 @@ Streamlit app to extract IC (integrated circuit) marking text via OCR and valida
 
 - Interactive ROI cropper (falls back to sliders if unavailable).
 - Preprocessing: contrast (CLAHE), binarize (adaptive threshold), denoise (median blur).
-- OCR via EasyOCR.
+- OCR via EasyOCR or Tesseract (pytesseract).
 - LLM validation with Gemini or DeepSeek.
 - Optional web validation with SerpAPI.
 - Robust error diagnostics (e.g., 400/401/402/404/429) with guidance.
@@ -26,6 +26,7 @@ Streamlit app to extract IC (integrated circuit) marking text via OCR and valida
 
 - Python 3.10+ recommended.
 - Windows, macOS, or Linux. The app runs CPU-only; GPU is optional.
+ - Optional: Tesseract OCR installed if you want to use the Tesseract engine.
 
 ## Setup
 
@@ -75,6 +76,15 @@ SERPAPI_KEY=...
 N8N_WEBHOOK_URL=https://...
 ```
 
+### Tesseract (optional)
+
+- Install Tesseract OCR locally.
+  - Windows default path: `C:\\Program Files\\Tesseract-OCR\\tesseract.exe`
+  - Linux default path: `/usr/bin/tesseract`
+- Configure the executable:
+  - In the app sidebar, set “Tesseract executable path (optional)” to your `tesseract.exe` path.
+  - Or set `TESSERACT_CMD` in the environment before running the app.
+
 ## Validation Flow
 
 The app prefers Gemini-only when `GEMINI_API_KEY` is present:
@@ -99,10 +109,12 @@ DeepSeek client behavior:
 ## Using the App
 
 1) Upload an IC image.
-2) Crop the marking ROI using the cropper (or sliders).
-3) Adjust preprocessing options as needed.
-4) Enter the API keys in the sidebar as desired.
-5) Run OCR and validation; review:
+2) Choose OCR Engine: EasyOCR or Tesseract.
+3) If using Tesseract, set the executable path (Windows example shown in the sidebar).
+4) Crop the marking ROI using the cropper (or sliders).
+5) Adjust preprocessing options as needed.
+6) Enter the API keys in the sidebar as desired.
+7) Run OCR and validation; review:
    - Status card (PASS/FAIL/WARNING)
    - “Detected Text”
    - “LLM Analysis” (includes response body on errors)
@@ -127,13 +139,17 @@ OCR / UI notes:
 - CPU-only is fine; GPU warnings can be ignored.
 - If “No text detected”, tighten the crop and try different preprocessing options.
 
+Tesseract issues:
+- `tesseract.exe not found` — set the correct path in the sidebar or `TESSERACT_CMD`.
+- Empty results — adjust ROI/preprocessing; default config uses `--psm 6`.
+
 ## Project Structure
 
 ```
 app.py                      # Streamlit UI and workflow
 utils/
   preprocess.py             # ROI preprocessing (contrast/binarize/denoise)
-  ocr.py                    # OCR via EasyOCR
+  ocr.py                    # OCR via EasyOCR and Tesseract
   validation.py             # Validation orchestrator & fallbacks
   gemini_client.py          # Gemini SDK/REST client with model normalization & fallbacks
   deepseek_client.py        # DeepSeek client with endpoint/model fallbacks

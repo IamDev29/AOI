@@ -26,8 +26,23 @@ def main():
 
     with st.sidebar:
         st.header("Options")
-        ocr_engine = st.selectbox("OCR Engine", ["EasyOCR"], index=0,
-                                  help="EasyOCR included for speed. Tesseract can be added later.")
+        ocr_engine = st.selectbox(
+            "OCR Engine",
+            ["EasyOCR", "Tesseract"],
+            index=0,
+            help="EasyOCR included. Tesseract requires local install of tesseract.exe."
+        )
+        # Allow specifying Tesseract executable path (Windows default shown)
+        default_tess = os.getenv("TESSERACT_CMD") or (
+            r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe" if os.name == "nt" else "/usr/bin/tesseract"
+        )
+        tess_cmd = st.text_input(
+            "Tesseract executable path (optional)",
+            value=default_tess,
+            help="Example on Windows: C\\\Program Files\\\Tesseract-OCR\\\tesseract.exe"
+        )
+        if tess_cmd:
+            os.environ["TESSERACT_CMD"] = tess_cmd
         apply_contrast = st.checkbox("Increase contrast (CLAHE)", value=True)
         apply_binarize = st.checkbox("Binarize (adaptive threshold)", value=True)
         apply_denoise = st.checkbox("Denoise (median blur)", value=True)
